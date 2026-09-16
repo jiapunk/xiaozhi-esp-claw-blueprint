@@ -1,9 +1,12 @@
 <div align="center">
 
+<img src="docs/branding/banner.png" alt="小智 AI × ESP-Claw 產品化藍圖" width="100%" />
+
 # 小智 AI × ESP-Claw 產品化藍圖
 
 **Lumen Agent Watch — 從開源積木到可量產的腕上 AI Agent**
 
+[![Live demo](https://img.shields.io/badge/─_Live_demo-jiapunk.github.io%2Flumen--watch--site-2EA043)](https://jiapunk.github.io/lumen-watch-site/)
 [![Version](https://img.shields.io/badge/藍圖版本-v0.1-2EA043)](#)
 [![Status](https://img.shields.io/badge/工程基線-M88_verified-2EA043)](#里程碑進度)
 [![Hardware](https://img.shields.io/badge/目標硬體-ESP32--S3--WROOM--2--N32R16V-E7352C?logo=espressif&logoColor=white)](#建議硬體基準)
