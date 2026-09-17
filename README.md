@@ -38,14 +38,14 @@
 ```mermaid
 flowchart TB
     subgraph DEV["ESP32-S3 裝置"]
-        VOICE["小智語音堆疊\n喚醒 · 音訊 · Codec · 顯示"]
-        BR["agent_bridge\n產品自有整合層"]
-        CLAW["ESP-Claw Runtime\nAgent Loop · 工具 · 記憶"]
+        VOICE["小智語音堆疊<br/>喚醒 · 音訊 · Codec · 顯示"]
+        BR["agent_bridge<br/>產品自有整合層"]
+        CLAW["ESP-Claw Runtime<br/>Agent Loop · 工具 · 記憶"]
         VOICE <--> BR <--> CLAW
     end
     subgraph CLOUD["產品自建雲"]
-        GW["語音 Gateway\nSTT / TTS / Realtime"]
-        CP["Control Plane\nAgent Proxy · 身分"]
+        GW["語音 Gateway<br/>STT / TTS / Realtime"]
+        CP["Control Plane<br/>Agent Proxy · 身分"]
     end
     DEV <-->|"安全 WSS · 雙向 Opus"| CLOUD
 ```
