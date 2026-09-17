@@ -1,111 +1,121 @@
 <div align="center">
 
-<img src="docs/branding/banner.png" alt="小智 AI × ESP-Claw 產品化藍圖" width="100%" />
+<img src="docs/branding/banner.png" alt="XiaoZhi AI × ESP-Claw Product Blueprint" width="100%" />
 
-# 小智 AI × ESP-Claw 產品化藍圖
+# XiaoZhi AI × ESP-Claw Product Blueprint
 
-**Lumen Agent Watch — 從開源積木到可量產的腕上 AI Agent**
+**Lumen Agent Watch — from open-source building blocks to a manufacturable wrist-worn AI agent**
 
 [![Live demo](https://img.shields.io/badge/Live_demo-jiapunk.github.io%2Flumen--watch--site-2EA043)](https://jiapunk.github.io/lumen-watch-site/)
-[![Version](https://img.shields.io/badge/藍圖版本-v0.1-2EA043)](#)
-[![Status](https://img.shields.io/badge/工程基線-M88_verified-2EA043)](#里程碑進度)
-[![Hardware](https://img.shields.io/badge/目標硬體-ESP32--S3--WROOM--2--N32R16V-E7352C?logo=espressif&logoColor=white)](#建議硬體基準)
+[![Version](https://img.shields.io/badge/blueprint_version-v0.1-2EA043)](#)
+[![Status](https://img.shields.io/badge/engineering_baseline-M88_verified-2EA043)](#milestone-progress)
+[![Hardware](https://img.shields.io/badge/target_hardware-ESP32--S3--WROOM--2--N32R16V-E7352C?logo=espressif&logoColor=white)](#recommended-hardware-baseline)
 
-[實作平台](https://github.com/jiapunk/xiaozhi-agent-platform) · [體驗網站](https://github.com/jiapunk/lumen-watch-site) · [完整藍圖文件](xiaozhi-esp-claw-product-blueprint-v0.1.md)
+[**English**](README.md) · [繁體中文](README.zh-TW.md) · [日本語](README.ja.md)
+
+[Implementation platform](https://github.com/jiapunk/xiaozhi-agent-platform) · [Interactive site](https://github.com/jiapunk/lumen-watch-site) · [Full blueprint (Traditional Chinese)](xiaozhi-esp-claw-product-blueprint-v0.1.md)
 
 </div>
 
 ---
 
-這份藍圖回答一個問題：**如何把 [小智 AI（xiaozhi-esp32）](https://github.com/78/xiaozhi-esp32)的成熟語音堆疊，
-與 [ESP-Claw](https://github.com/espressif/esp-claw) 的裝置端 Agent Runtime，整合成一款真正可量產的
-腕上 AI Agent 產品。**
+This blueprint answers one question: **how do you combine the mature voice stack of
+[XiaoZhi AI (xiaozhi-esp32)](https://github.com/78/xiaozhi-esp32) with the on-device
+agent runtime of [ESP-Claw](https://github.com/espressif/esp-claw) into a wrist-worn
+AI agent product that can actually be manufactured?**
 
-分析基準：`xiaozhi-esp32` commit `18a60b8`、`esp-claw` commit `9ba07d0`。
+Analysis baseline: `xiaozhi-esp32` commit `18a60b8`, `esp-claw` commit `9ba07d0`.
 
-## 核心結論
+## Core conclusion
 
-> 整合可行，但**不應直接合併兩套完整應用**。
+> The integration is feasible — but the two complete applications **must not be merged directly**.
 
-1. **建立產品自有的 ESP-IDF 應用主框架** — 唯一管理啟動順序、任務、狀態、網路政策、安全、OTA 與產品生命週期。
-2. **選擇性重用小智的語音與板級模組** — 抽取已驗證的喚醒、音訊、Codec、顯示與語音協議，不沿用完整應用殼。
-3. **ESP-Claw 作為裝置端 Agent Runtime** — Agent Loop、工具調用、事件路由、技能、排程與本機記憶。
-4. **新增產品自有整合層 `agent_bridge`** — 語音層 STT 文字進入 ESP-Claw，Agent 結果送往 TTS；硬體能力映射為 ESP-Claw Capability。
-5. **產品端自建語音與裝置雲** — 小智官方免費服務定位為個人使用，不應成為商用 SLA 的依賴。
+1. **Build a product-owned ESP-IDF application shell** — the single owner of boot order,
+   tasks, state, network policy, security, OTA and the product lifecycle.
+2. **Selectively reuse XiaoZhi's voice and board modules** — extract the proven wake-word,
+   audio, codec, display and voice-protocol layers; do not inherit the full app shell.
+3. **ESP-Claw as the on-device agent runtime** — agent loop, tool calls, event routing,
+   skills, scheduling and local memory.
+4. **Add a product-owned integration layer, `agent_bridge`** — STT text flows into
+   ESP-Claw, agent results flow to TTS; hardware capabilities map to ESP-Claw capabilities.
+5. **Build the product's own voice and device cloud** — XiaoZhi's free official service is
+   positioned for personal use and must not become a commercial SLA dependency.
 
-## 系統架構
+## System architecture
 
 ```mermaid
 flowchart TB
-    subgraph DEV["ESP32-S3 裝置"]
-        VOICE["小智語音堆疊<br/>喚醒 · 音訊 · Codec · 顯示"]
-        BR["agent_bridge<br/>產品自有整合層"]
-        CLAW["ESP-Claw Runtime<br/>Agent Loop · 工具 · 記憶"]
+    subgraph DEV["ESP32-S3 device"]
+        VOICE["XiaoZhi voice stack<br/>wake · audio · codec · display"]
+        BR["agent_bridge<br/>product-owned integration layer"]
+        CLAW["ESP-Claw runtime<br/>agent loop · tools · memory"]
         VOICE <--> BR <--> CLAW
     end
-    subgraph CLOUD["產品自建雲"]
-        GW["語音 Gateway<br/>STT / TTS / Realtime"]
-        CP["Control Plane<br/>Agent Proxy · 身分"]
+    subgraph CLOUD["Product-owned cloud"]
+        GW["Voice gateway<br/>STT / TTS / Realtime"]
+        CP["Control plane<br/>agent proxy · identity"]
     end
-    DEV <-->|"安全 WSS · 雙向 Opus"| CLOUD
+    DEV <-->|"secure WSS · bidirectional Opus"| CLOUD
 ```
 
-## 三種整合深度
+## Three integration depths
 
-| 方案 | 說明 | 適用 |
+| Option | Description | Use |
 |---|---|---|
-| A. 快速展示版 | 雲端 Agent，小智裝置以 MCP 接入 | Demo / 概念驗證 |
-| **B. 建議 MVP** | **裝置端 Agent Loop，雲端 ASR/TTS/LLM** | **本產品採用** |
-| C. 後續進階版 | 雙層 Agent（裝置端 + 雲端） | 產品成熟後演進 |
+| A. Quick demo | Cloud agent, device joins via MCP | Demos / proof of concept |
+| **B. Recommended MVP** | **On-device agent loop, cloud ASR/TTS/LLM** | **Chosen for this product** |
+| C. Advanced | Two-tier agent (on-device + cloud) | Later evolution |
 
-## 建議硬體基準
+## Recommended hardware baseline
 
-| 項目 | 選擇 | 原因 |
+| Item | Choice | Why |
 |---|---|---|
-| 長期自訂硬體 | **ESP32-S3-WROOM-2-N32R16V**（32MB Flash / 16MB PSRAM） | ESP-Claw 最低需求 8+8MB；產品還需雙 OTA、語音資產、技能與持久記憶 |
-| 首個可編譯候選 | **ESP32-S3-BOX-3 N16R8** | 僅用於縮短整合與真機驗證路徑，不具量產資格 |
-| 暫不承諾 | ESP32-C3 / C6 低資源晶片 | 無法運行完整 Agent |
+| Long-term custom hardware | **ESP32-S3-WROOM-2-N32R16V** (32 MB flash / 16 MB PSRAM) | ESP-Claw's minimum is 8+8 MB; the product adds dual OTA, voice assets, skills and persistent memory |
+| First compilable candidate | **ESP32-S3-BOX-3 N16R8** | Only to shorten integration and on-hardware validation; not production qualified |
+| Not committed | ESP32-C3 / C6 low-resource chips | Cannot run the full agent |
 
-## 里程碑進度
+## Milestone progress
 
-藍圖規劃了 M0–M3 的產品化里程碑（架構 Spike → Voice Agent Alpha → Product MVP → EVT/DVT/PVT）。
-實際工程推進速度遠超預期，**實作平台已完成 M0–M88 的驗證基線**：
+The blueprint planned product milestones M0–M3 (architecture spike → voice agent alpha →
+product MVP → EVT/DVT/PVT). Actual engineering moved far faster — **the implementation
+platform has completed verified gates M0 through M88**:
 
-| 階段 | 涵蓋 |
+| Phase | Coverage |
 |---|---|
-| 基礎建設 | 建構基線、語音協議、音訊串流、安全裝置整合 |
-| 身分與連線 | 憑證生命週期、工廠身分、控制平面、Wi-Fi 生命週期、安全配網 |
-| 儲存與 OTA | 簽章 A/B OTA、機隊控制、不可變韌體來源、OCI 供應鏈 |
-| Agent 產品面 | 有界記憶、執行時編排、實體動作、內容隱私可觀測性 |
-| 所有權與同意 | 裝置撤銷、所有權認領、能力防火牆、精確動作同意 |
-| 釋出基礎設施 | 簽章 Kubernetes 部署、SKU 防護、工廠清單、eFuse 生命週期 |
-| Companion 與交付 | JIT 同意、推播交付、簽章 App、mTLS 調度 |
-| 營運與擴展 | 資料庫韌性、分散式協調、金鑰輪替、SLO、用量預算、服務授權 |
+| Foundation | Build baseline, voice protocol, audio streaming, secure device integration |
+| Identity & connectivity | Credential lifecycle, factory identity, control plane, Wi-Fi lifecycle, secure provisioning |
+| Storage & OTA | Signed A/B OTA, fleet control, immutable firmware origin, OCI supply chain |
+| Agent product surface | Bounded memory, runtime orchestration, physical actions, content-private observability |
+| Ownership & consent | Device revocation, ownership claim, capability firewall, exact-action consent |
+| Release infrastructure | Signed Kubernetes deployment, SKU guard, factory manifests, eFuse lifecycle |
+| Companion & delivery | JIT consent, push delivery, signed app, mTLS dispatch |
+| Operate & scale | Database resilience, distributed coordination, key rotation, SLOs, usage budgets, entitlements |
 
-→ 詳細實作見 [xiaozhi-agent-platform](https://github.com/jiapunk/xiaozhi-agent-platform)。
+→ Implementation detail: [xiaozhi-agent-platform](https://github.com/jiapunk/xiaozhi-agent-platform).
 
-## 藍圖文件導覽
+## Blueprint document guide
 
-完整文件：[`xiaozhi-esp-claw-product-blueprint-v0.1.md`](xiaozhi-esp-claw-product-blueprint-v0.1.md)
+Full document (Traditional Chinese): [`xiaozhi-esp-claw-product-blueprint-v0.1.md`](xiaozhi-esp-claw-product-blueprint-v0.1.md)
 
-| 章節 | 內容 |
+| Section | Content |
 |---|---|
-| [1. 結論](xiaozhi-esp-claw-product-blueprint-v0.1.md#1-結論) | 整合策略與硬體基準 |
-| [2. 建議的系統邊界](xiaozhi-esp-claw-product-blueprint-v0.1.md#2-建議的系統邊界) | 韌體唯一所有權原則 |
-| [3. 三種整合深度](xiaozhi-esp-claw-product-blueprint-v0.1.md#3-三種整合深度) | A / B / C 方案比較 |
-| [4. 韌體整合設計](xiaozhi-esp-claw-product-blueprint-v0.1.md#4-韌體整合設計) | 引入元件、整合介面、語音協議擴充 |
-| [5. MVP 參考產品](xiaozhi-esp-claw-product-blueprint-v0.1.md#5-mvp-參考產品) | 硬體基準、內建能力、驗收指標 |
-| [6. 產品雲不可缺少的部分](xiaozhi-esp-claw-product-blueprint-v0.1.md#6-產品雲不可缺少的部分) | 自建雲端需求 |
-| [7. 安全與法遵基線](xiaozhi-esp-claw-product-blueprint-v0.1.md#7-安全與法遵基線) | 安全設計底線 |
-| [8. 授權與供應鏈](xiaozhi-esp-claw-product-blueprint-v0.1.md#8-授權與供應鏈) | 開源授權合規 |
-| [9. 建議里程碑](xiaozhi-esp-claw-product-blueprint-v0.1.md#9-建議里程碑) | M0–M3 產品化時程 |
-| [10. 工程 Backlog](xiaozhi-esp-claw-product-blueprint-v0.1.md#10-現在先做的工程-backlog) | 優先工作清單 |
+| [1. Conclusion](xiaozhi-esp-claw-product-blueprint-v0.1.md#1-結論) | Integration strategy and hardware baseline |
+| [2. System boundaries](xiaozhi-esp-claw-product-blueprint-v0.1.md#2-建議的系統邊界) | Firmware single-ownership principle |
+| [3. Integration depths](xiaozhi-esp-claw-product-blueprint-v0.1.md#3-三種整合深度) | Options A / B / C compared |
+| [4. Firmware integration design](xiaozhi-esp-claw-product-blueprint-v0.1.md#4-韌體整合設計) | Components, integration seams, voice protocol extensions |
+| [5. MVP reference product](xiaozhi-esp-claw-product-blueprint-v0.1.md#5-mvp-參考產品) | Hardware baseline, built-in capabilities, acceptance metrics |
+| [6. The product cloud](xiaozhi-esp-claw-product-blueprint-v0.1.md#6-產品雲不可缺少的部分) | Must-have cloud components |
+| [7. Security & compliance baseline](xiaozhi-esp-claw-product-blueprint-v0.1.md#7-安全與法遵基線) | Security design floor |
+| [8. Licensing & supply chain](xiaozhi-esp-claw-product-blueprint-v0.1.md#8-授權與供應鏈) | Open-source license compliance |
+| [9. Suggested milestones](xiaozhi-esp-claw-product-blueprint-v0.1.md#9-建議里程碑) | M0–M3 productization timeline |
+| [10. Engineering backlog](xiaozhi-esp-claw-product-blueprint-v0.1.md#10-現在先做的工程-backlog) | Priority work list |
 
-## 相關 Repo
+## Related repositories
 
-- 🛠️ [xiaozhi-agent-platform](https://github.com/jiapunk/xiaozhi-agent-platform) — 藍圖的完整實作（韌體 + Gateway + Companion）
-- 🌐 [lumen-watch-site](https://github.com/jiapunk/lumen-watch-site) — 產品介紹與互動展示網站
+- 🛠️ [xiaozhi-agent-platform](https://github.com/jiapunk/xiaozhi-agent-platform) — the full implementation (firmware + gateway + companion)
+- 🌐 [lumen-watch-site](https://github.com/jiapunk/lumen-watch-site) — interactive product introduction site
 
-## 授權
+## License
 
-藍圖文件為專案自有文件。引用之上游專案：xiaozhi-esp32（MIT）、ESP-Claw（Apache-2.0）。
+The blueprint document is a project-owned document. Upstream projects referenced:
+xiaozhi-esp32 (MIT), ESP-Claw (Apache-2.0).
